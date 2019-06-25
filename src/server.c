@@ -57,7 +57,7 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
     int response_length = sprintf(response, 
         "HTTP/1.1 404 NOT FOUND\n" 
         "Content-Type: text/html\n"
-        "Content_Length: %d\n",
+        "Content_Length: %d\n"
         "Connection: close\n"
         "\n"
         "%s"
@@ -86,12 +86,17 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 void get_d20(int fd)
 {
     // Generate a random number between 1 and 20 inclusive
-    
+    int random_num = (rand() % 20) + 1;
+    char response_body[16];
+    sprintf(response_body, "%d\n", random_num);
+    printf("response_body: %s\n", response_body);
+
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
 
     // Use send_response() to send it back as text/plain data
+    send_response(fd, "HTTP/1.1 200 OK", "text/plain", response_body, strlen(response_body));
 
     ///////////////////
     // IMPLEMENT ME! //
@@ -175,9 +180,11 @@ void handle_http_request(int fd, struct cache *cache)
         printf("GET\n");
         if(strcmp(path, "/d20") == 0){
             printf("/d20\n");
+            get_d20(fd);
         }else{
-            resp_404(fd);
+            get_file(fd, cache, path);
         }
+        resp_404(fd);
     }
 
 
