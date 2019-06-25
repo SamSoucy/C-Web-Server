@@ -55,14 +55,15 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
     
 
     int response_length = sprintf(response, 
-        "HTTP/1.1 404 NOT FOUND\n" 
-        "Content-Type: text/html\n"
+        "%s\n" 
+        "Content-Type: %s\n"
         "Content_Length: %d\n"
         "Connection: close\n"
         "\n"
         "%s"
-        , header, content_type, content_length, body
-    );
+        , header, content_type, content_length, body);
+
+    
     // Build HTTP response and store it in response
 
     ///////////////////
@@ -71,6 +72,12 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 
     // Send it all!
     int rv = send(fd, response, response_length, 0);
+
+    if (rv < 0) {
+        perror("send");
+    }
+    
+    rv = send(fd, body, content_length, 0);
 
     if (rv < 0) {
         perror("send");
@@ -87,16 +94,16 @@ void get_d20(int fd)
 {
     // Generate a random number between 1 and 20 inclusive
     int random_num = (rand() % 20) + 1;
-    char response_body[16];
-    sprintf(response_body, "%d\n", random_num);
-    printf("response_body: %s\n", response_body);
+    char response[16];
+    sprintf(response, "%d\n", random_num);
+    printf("response: %s\n", response);
 
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
 
     // Use send_response() to send it back as text/plain data
-    send_response(fd, "HTTP/1.1 200 OK", "text/plain", response_body, strlen(response_body));
+    send_response(fd, "HTTP/1.1 200 OK", "text/plain", response, strlen(response));
 
     ///////////////////
     // IMPLEMENT ME! //
@@ -114,6 +121,7 @@ void resp_404(int fd)
 
     // Fetch the 404.html file
     snprintf(filepath, sizeof filepath, "%s/404.html", SERVER_FILES);
+    // snprintf(filepath, sizeof filepath, "%s/cat.jpg", SERVER_ROOT);
     filedata = file_load(filepath);
 
     if (filedata == NULL) {
@@ -137,6 +145,8 @@ void get_file(int fd, struct cache *cache, char *request_path)
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
+   
+    
 }
 
 /**
@@ -150,6 +160,7 @@ char *find_start_of_body(char *header)
     ///////////////////
     // IMPLEMENT ME! // (Stretch)
     ///////////////////
+ 
 }
 
 /**
@@ -168,13 +179,14 @@ void handle_http_request(int fd, struct cache *cache)
         return;
     }
 
+
     char method[128]; 
 	char path[8192]; 
 
     sscanf(request, "%s %s", method, path);
 
-    printf("%s\n", method); 
-	printf("%s\n", path);   
+    // printf("%s\n", method); 
+	// printf("%s\n", path);   
 
     if(strcmp(method, "GET") == 0){
         printf("GET\n");
@@ -182,7 +194,7 @@ void handle_http_request(int fd, struct cache *cache)
             printf("/d20\n");
             get_d20(fd);
         }else{
-            get_file(fd, cache, path);
+            resp_404(fd);
         }
         resp_404(fd);
     }
