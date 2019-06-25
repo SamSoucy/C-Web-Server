@@ -163,6 +163,23 @@ void handle_http_request(int fd, struct cache *cache)
         return;
     }
 
+    char method[128]; 
+	char path[8192]; 
+
+    sscanf(request, "%s %s", method, path);
+
+    printf("%s\n", method); 
+	printf("%s\n", path);   
+
+    if(strcmp(method, "GET") == 0){
+        printf("GET\n");
+        if(strcmp(path, "/d20") == 0){
+            printf("/d20\n");
+        }else{
+            resp_404(fd);
+        }
+    }
+
 
     ///////////////////
     // IMPLEMENT ME! //
@@ -223,7 +240,7 @@ int main(void)
         
         // newfd is a new socket descriptor for the new connection.
         // listenfd is still listening for new connections.
-        resp_404(newfd);
+        // resp_404(newfd);
         handle_http_request(newfd, cache);
 
         close(newfd);
