@@ -52,16 +52,17 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 {
     const int max_response_size = 262144;
     char response[max_response_size];
+    
 
-    int response_length = sprintf(response,
-        "HTTP/1.1 200 OK\n"
-        "content_type: text/plain\n"
-        "response_length: %d\n"
+    int response_length = sprintf(response, 
+        "HTTP/1.1 404 NOT FOUND\n" 
+        "Content-Type: text/html\n"
+        "Content_Length: %d\n",
         "Connection: close\n"
         "\n"
-        "%s",
-        header, content_type, content_length, body);
-
+        "%s"
+        , header, content_type, content_length, body
+    );
     // Build HTTP response and store it in response
 
     ///////////////////
@@ -222,7 +223,7 @@ int main(void)
         
         // newfd is a new socket descriptor for the new connection.
         // listenfd is still listening for new connections.
-
+        resp_404(newfd);
         handle_http_request(newfd, cache);
 
         close(newfd);
