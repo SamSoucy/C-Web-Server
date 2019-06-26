@@ -54,7 +54,7 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
     char response[max_response_size];
     
 
-    int response_length = sprintf(response, 
+    int response_length = sprintf(response,
         "%s\n" 
         "Content-Type: %s\n"
         "Content_Length: %d\n"
@@ -79,9 +79,9 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
     
     rv = send(fd, body, content_length, 0);
 
-    if (rv < 0) {
-        perror("send");
-    }
+    // if (rv < 0) {
+    //     perror("send");
+    // }
 
     return rv;
 }
@@ -96,7 +96,7 @@ void get_d20(int fd)
     int random_num = (rand() % 20) + 1;
     char response[16];
     sprintf(response, "%d\n", random_num);
-    printf("response: %s\n", response);
+    // printf("response: %s\n", response);
 
     ///////////////////
     // IMPLEMENT ME! //
@@ -142,9 +142,31 @@ void resp_404(int fd)
  */
 void get_file(int fd, struct cache *cache, char *request_path)
 {
+    
+    (void)cache;
+    
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
+    char filepath[4096];
+    struct file_data *filedata; 
+    char *mime_type;
+
+    // Fetch the file
+    
+    snprintf(filepath, sizeof filepath, "%s%s", SERVER_ROOT, request_path);
+    filedata = file_load(filepath);
+
+    if (filedata == NULL) {
+        resp_404(fd);
+        return;
+    }
+
+    mime_type = mime_type_get(filepath);
+
+    send_response(fd, "HTTP/1.1 200 FOUND", mime_type, filedata->data, filedata->size);
+
+    file_free(filedata);
    
     
 }
@@ -170,6 +192,8 @@ void handle_http_request(int fd, struct cache *cache)
 {
     const int request_buffer_size = 65536; // 64K
     char request[request_buffer_size];
+    char method[128]; 
+	char path[8192]; 
 
     // Read request
     int bytes_recvd = recv(fd, request, request_buffer_size - 1, 0);
@@ -178,23 +202,13 @@ void handle_http_request(int fd, struct cache *cache)
         perror("recv");
         return;
     }
-
-
-    char method[128]; 
-	char path[8192]; 
-
-    sscanf(request, "%s %s", method, path);
-
-    // printf("%s\n", method); 
-	// printf("%s\n", path);   
+    sscanf(request, "%s %s", method, path);  
 
     if(strcmp(method, "GET") == 0){
-        printf("GET\n");
         if(strcmp(path, "/d20") == 0){
-            printf("/d20\n");
             get_d20(fd);
         }else{
-            resp_404(fd);
+            get_file(fd, cache, path);
         }
         resp_404(fd);
     }
