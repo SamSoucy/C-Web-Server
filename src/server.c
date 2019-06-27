@@ -58,12 +58,11 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
         "Content-Type: %s\n"
         "Content_Length: %d\n"
         "Connection: close\n"
-        "\n"
-        "%s", 
-        header, content_type, content_length, body);
-
+        "\n", 
+        header, content_type, content_length);
     
-    // Build HTTP response and store it in response
+
+        // Build HTTP response and store it in response
 
     // Send it all!
     int rv = send(fd, response, response_length, 0);
@@ -74,9 +73,9 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
     
     rv = send(fd, body, content_length, 0);
 
-    // if (rv < 0) {
-    //     perror("send");
-    // }
+    if (rv < 0) {
+        perror("send");
+    }
 
     return rv;
 }
@@ -116,7 +115,7 @@ void resp_404(int fd)
 
     // Fetch the 404.html file
     snprintf(filepath, sizeof filepath, "%s/404.html", SERVER_FILES);
-    // snprintf(filepath, sizeof filepath, "%s/cat.jpg", SERVER_ROOT);
+    // snprintf(filepath, sizeof filepath, "%s/cat.png", SERVER_ROOT);
     filedata = file_load(filepath);
 
     if (filedata == NULL) {
@@ -175,6 +174,7 @@ void get_file(int fd, struct cache *cache, char *request_path)
 char *find_start_of_body(char *header)
 {
     (void)header;
+    return NULL;
     ///////////////////
     // IMPLEMENT ME! // (Stretch)
     ///////////////////
