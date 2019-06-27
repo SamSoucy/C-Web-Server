@@ -9,6 +9,13 @@
  */
 struct cache_entry *alloc_entry(char *path, char *content_type, void *content, int content_length)
 {
+    (void)path;
+    (void)content_type;
+    (void)content;
+    (void)content_length;
+
+    return NULL;
+
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
@@ -19,6 +26,7 @@ struct cache_entry *alloc_entry(char *path, char *content_type, void *content, i
  */
 void free_entry(struct cache_entry *entry)
 {
+    (void)entry;
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
