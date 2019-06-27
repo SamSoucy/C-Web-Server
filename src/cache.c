@@ -9,16 +9,16 @@
  */
 struct cache_entry *alloc_entry(char *path, char *content_type, void *content, int content_length)
 {
-    (void)path;
-    (void)content_type;
-    (void)content;
-    (void)content_length;
+    struct cache_entry *ce = malloc(sizeof(struct cache_entry));
 
-    return NULL;
+    ce->path = strdup(path);
+    ce->content_type =  strdup(content_type);
+    ce->content_length = content_length;
 
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+    ce->content = malloc(content_length);
+    memcpy(ce->content, content, content_length);
+
+    return ce;
 }
 
 /**
@@ -136,18 +136,18 @@ void cache_free(struct cache *cache)
  */
 void cache_put(struct cache *cache, char *path, char *content_type, void *content, int content_length)
 {
-    // struct cache_entry *entry = alloc_entry(path, content_type, content, content_length);
+    struct cache_entry *ce = alloc_entry(path, content_type, content, content_length);
 
-    // dllist_insert_head(cache, entry);
+    dllist_insert_head(cache, ce);
 
-    // hashtable_put(cache->index, entry->path, entry);
+    hashtable_put(cache->index, ce->path, ce);
 
-    // cache->cur_size++;
+    cache->cur_size++;
 
-    // if(cache->cur_size > cache->max_size){
-    //     hashtable_delete(cache->index, cache->tail->path);
-    //     free_entry(dllist_remove_tail(cache));
-    // }
+    if(cache->cur_size > cache->max_size){
+        hashtable_delete(cache->index, cache->tail->path);
+        free_entry(dllist_remove_tail(cache));
+    }
 }
 
 /**
