@@ -88,20 +88,12 @@ void get_d20(int fd)
 {
     // Generate a random number between 1 and 20 inclusive
     int random_num = (rand() % 20) + 1;
-    char response[16];
-    sprintf(response, "%d\n", random_num);
-    // printf("response: %s\n", response);
-
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+    char response[10];
+    int resp_len = sprintf(response, "%d\n", random_num);
+    
 
     // Use send_response() to send it back as text/plain data
-    send_response(fd, "HTTP/1.1 200 OK", "text/plain", response, strlen(response));
-
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+    send_response(fd, "HTTP/1.1 200 OK", "text/plain", response, resp_len);
 }
 
 /**
@@ -151,9 +143,9 @@ void get_file(int fd, struct cache *cache, char *request_path)
             return;
         }
         mime_type = mime_type_get(filepath);
-        
+
         cache_put(cache, request_path, mime_type, filedata->data, filedata->size);
-        
+
         send_response(fd, "HTTP/1.1 200 OK", mime_type, filedata->data, filedata->size);
 
         file_free(filedata);
@@ -193,8 +185,7 @@ void handle_http_request(int fd, struct cache *cache)
 {
     const int request_buffer_size = 65536; // 64K
     char request[request_buffer_size];
-    char method[128]; 
-	char path[8192]; 
+     
 
     // Read request
     int bytes_recvd = recv(fd, request, request_buffer_size - 1, 0);
@@ -203,6 +194,10 @@ void handle_http_request(int fd, struct cache *cache)
         perror("recv");
         return;
     }
+
+    char method[128]; 
+	char path[8192];
+    
     sscanf(request, "%s %s", method, path);  
 
     if(strcmp(method, "GET") == 0){
@@ -211,7 +206,7 @@ void handle_http_request(int fd, struct cache *cache)
         }else{
             get_file(fd, cache, path);
         }
-        resp_404(fd);
+        // resp_404(fd);
     }
 
 
