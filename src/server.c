@@ -52,15 +52,26 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 {
     const int max_response_size = 262144;
     char response[max_response_size];
+    
+    int response_length = sprintf(response,
+        "%s\n" 
+        "Content-Type: %s\n"
+        "Content_Length: %d\n"
+        "Connection: close\n"
+        "\n", 
+        header, content_type, content_length);
+    
 
-    // Build HTTP response and store it in response
-
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+        // Build HTTP response and store it in response
 
     // Send it all!
     int rv = send(fd, response, response_length, 0);
+
+    if (rv < 0) {
+        perror("send");
+    }
+    
+    rv = send(fd, body, content_length, 0);
 
     if (rv < 0) {
         perror("send");
@@ -76,16 +87,13 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 void get_d20(int fd)
 {
     // Generate a random number between 1 and 20 inclusive
+    int random_num = (rand() % 20) + 1;
+    char response[10];
+    int resp_len = sprintf(response, "%d\n", random_num);
     
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
 
     // Use send_response() to send it back as text/plain data
-
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+    send_response(fd, "HTTP/1.1 200 OK", "text/plain", response, resp_len);
 }
 
 /**
@@ -99,6 +107,7 @@ void resp_404(int fd)
 
     // Fetch the 404.html file
     snprintf(filepath, sizeof filepath, "%s/404.html", SERVER_FILES);
+    // snprintf(filepath, sizeof filepath, "%s/cat.png", SERVER_ROOT);
     filedata = file_load(filepath);
 
     if (filedata == NULL) {
@@ -119,9 +128,38 @@ void resp_404(int fd)
  */
 void get_file(int fd, struct cache *cache, char *request_path)
 {
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+    char filepath[4096];
+    struct file_data *filedata; 
+    char *mime_type;
+
+    struct cache_entry *ce = cache_get(cache, request_path);
+
+    if (ce == NULL){
+        snprintf(filepath, sizeof filepath, "%s%s", SERVER_ROOT, request_path);
+        filedata = file_load(filepath);
+
+        if (filedata == NULL) {
+            resp_404(fd);
+            return;
+        }
+        mime_type = mime_type_get(filepath);
+
+        cache_put(cache, request_path, mime_type, filedata->data, filedata->size);
+
+        send_response(fd, "HTTP/1.1 200 OK", mime_type, filedata->data, filedata->size);
+
+        file_free(filedata);
+    }else{
+        send_response(fd, "HTTP/1.1 200 OK", ce->content_type, ce->content, ce->content_length);
+    }
+
+    // Fetch the file
+
+    
+
+    
+   
+    
 }
 
 /**
@@ -132,9 +170,12 @@ void get_file(int fd, struct cache *cache, char *request_path)
  */
 char *find_start_of_body(char *header)
 {
+    (void)header;
+    return NULL;
     ///////////////////
     // IMPLEMENT ME! // (Stretch)
     ///////////////////
+ 
 }
 
 /**
@@ -144,6 +185,7 @@ void handle_http_request(int fd, struct cache *cache)
 {
     const int request_buffer_size = 65536; // 64K
     char request[request_buffer_size];
+     
 
     // Read request
     int bytes_recvd = recv(fd, request, request_buffer_size - 1, 0);
@@ -151,6 +193,20 @@ void handle_http_request(int fd, struct cache *cache)
     if (bytes_recvd < 0) {
         perror("recv");
         return;
+    }
+
+    char method[128]; 
+	char path[8192];
+    
+    sscanf(request, "%s %s", method, path);  
+
+    if(strcmp(method, "GET") == 0){
+        if(strcmp(path, "/d20") == 0){
+            get_d20(fd);
+        }else{
+            get_file(fd, cache, path);
+        }
+        // resp_404(fd);
     }
 
 
@@ -213,7 +269,7 @@ int main(void)
         
         // newfd is a new socket descriptor for the new connection.
         // listenfd is still listening for new connections.
-
+        // resp_404(newfd);
         handle_http_request(newfd, cache);
 
         close(newfd);
